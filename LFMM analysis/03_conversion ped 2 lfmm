@@ -1,0 +1,62 @@
+#!/bin/bash
+# ped2lfmm_chr_parallel.sh
+
+# 设置路径参数
+input_dir="/data/supeng/env/env/horse/lfmm"  # 输入目录
+tool_path="/data/supeng/env/lfmm/LFMM_CL_v1.5/bin/ped2lfmm"  # 工具绝对路径
+max_parallel=10  # 最大并行任务数
+
+# 染色体设置（根据实际数据修改）
+start_chr=1
+end_chr=31  # 马通常31对常染色体
+
+# 检查工具是否存在
+if [ ! -f "$tool_path" ]; then
+    echo "错误：ped2lfmm工具未找到在 $tool_path"
+    exit 1
+fi
+
+# 创建日志目录
+log_dir="$input_dir/conversion_logs"
+mkdir -p "$log_dir"
+
+# 并行处理函数
+counter=0
+for chr in $(seq $start_chr $end_chr); do
+    input_ped="${input_dir}/chr${chr}.ped"
+    output_lfmm="${input_dir}/chr${chr}.lfmm"
+    
+    # 检查输入文件是否存在
+    if [ ! -f "$input_ped" ]; then
+        echo "警告：输入文件 $input_ped 不存在，跳过处理"
+        continue
+    fi
+    
+    # 执行转换（带错误重定向）
+    $tool_path "$input_ped" > "${log_dir}/chr${chr}.log" 2>&1 &
+    
+    # 控制并行度
+    counter=$((counter+1))
+    if [ $((counter % max_parallel)) -eq 0 ]; then
+        wait
+    fi
+done
+wait
+
+# 验证输出文件
+missing_files=0
+for chr in $(seq $start_chr $end_chr); do
+    if [ ! -f "${input_dir}/chr${chr}.lfmm" ]; then
+        echo "警告：chr${chr}.lfmm 未生成，请检查 ${log_dir}/chr${chr}.log"
+        missing_files=$((missing_files+1))
+    fi
+done
+
+# 完成报告
+echo "========================================"
+echo "转换完成！"
+echo "输入目录: $input_dir"
+echo "成功文件: $((end_chr - missing_files))/$((end_chr - start_chr + 1))"
+echo "日志目录: $log_dir"
+echo "未生成文件数: $missing_files"
+echo "========================================"
