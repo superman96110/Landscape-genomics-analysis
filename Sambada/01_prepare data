@@ -1,0 +1,16 @@
+# 将vcf文件转为ped和map格式
+plink --vcf horse_filter_pruned_956.vcf --recode --double-id --allow-extra-chr --chr-set 31 --out horse_filter_pruned_956 --keep-allele-order 
+
+# 使用sambada自带的程序，将基因组数据转为sambada识别的格式
+
+
+# 使用sambada自带的split脚本，将转换后的文件进行拆分
+/data/supeng/env/sambada/sambada-0.8.3-ubuntu/binaries/supervision param-split.txt
+
+# 对环境气候数据进行统计分析
+# 整理气候数据文件,将csv的分隔符替换为“\t”
+# 修改env数据的title行，第一列名称为ID，第二列和第三列分别为经纬度，longitude,latitude（和param-a.txt文件对应）
+
+# 运行sambada，不使用拆分的方法，直接运行整个文件
+nohup /data/supeng/env/sambada/sambada-0.8.3-ubuntu/binaries/sambada param-a.txt horse_956_env_modified.csv horse_filer_pruned_sambada  &
+
