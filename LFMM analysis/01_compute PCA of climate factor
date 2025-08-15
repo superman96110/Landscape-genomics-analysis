@@ -1,1 +1,78 @@
+library(readxl)
+library(FactoMineR)
+library(factoextra)
+library(ggplot2)
+library(plotly)
+library(ggrepel)
+library(writexl)
+
+
+# 读取数据
+data <- read_excel("/caas/毕业课题/第四章_景观基因组/horse/final_data.xlsx", sheet = "all_bio", range = cell_cols("A:EC"))
+
+
+# 提取品种信息和环境因子数据
+breed_data <- data[, c("Breed", "Lat", "Lon", "bio1", "bio2")]
+
+# 执行主成分分析（PCA）
+climate.pca <- PCA(data[,-c(1:3)], ncp = 3, scale.unit = TRUE, graph = FALSE)
+
+# 获取前三个主成分的解释方差
+pca_eig1 <- round(climate.pca$eig[1, 2], 2)
+pca_eig2 <- round(climate.pca$eig[2, 2], 2)
+pca_eig3 <- round(climate.pca$eig[3, 2], 2)
+
+# 读取变量分组信息
+group_var <- read_excel("/caas/毕业课题/第四章_景观基因组/horse/final_data.xlsx", sheet = "annotation", range = cell_cols("A:B"))
+colnames(group_var) <- c("Variable", "Group")
+
+# 提取变量在前三个主成分上的坐标
+var_sample <- data.frame(climate.pca$var$coord[, 1:3])
+var_sample$Variable <- rownames(var_sample)
+
+# 将分组信息添加到变量数据框中
+var_sample <- merge(var_sample, group_var, by = "Variable")
+
+# 提供至少17种颜色
+colors <- c(
+    'blue', 'yellow', 'azure3', 'bisque', 'darksalmon', 'deeppink', 'lightpink', 'cyan', 
+    'orange', 'red', 'green', "#B09C85", "#7FCBFF", "#7E6148", "#E18727", "#DC0000", 'purple'
+)
+
+# 绘制三维变量 PCA 图
+fig <- plot_ly(var_sample, x = ~Dim.1, y = ~Dim.2, z = ~Dim.3, color = ~Group, colors = colors, text = ~Variable) %>%
+    add_markers() %>%
+    layout(scene = list(xaxis = list(title = paste('PC1:', pca_eig1, '%')),
+                        yaxis = list(title = paste('PC2:', pca_eig2, '%')),
+                        zaxis = list(title = paste('PC3:', pca_eig3, '%'))))
+
+# 保存为HTML文件
+htmlwidgets::saveWidget(fig, "variable_pca_plot.html")
+
+# 提取个体在前三个主成分上的坐标
+ind_sample <- data.frame(climate.pca$ind$coord[, 1:3])
+colnames(ind_sample) <- c("Dim.1", "Dim.2", "Dim.3")
+ind_sample$Breed <- breed_data$Breed
+
+# 打印主成分1、2和3的值
+print(ind_sample)
+
+# 使用包含纬度和经度的个体数据进行绘图
+ind_sample <- cbind(ind_sample, breed_data[, c("Lat", "Lon")])
+
+# 创建颜色向量，根据分组信息为每个分组分配不同的颜色
+group_colors <- c('blue', 'green', 'red', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'brown', 'pink', 'black', 'gray', 'turquoise', 'violet', 'gold', 'darkgreen', 'darkblue')
+
+# 绘制三维个体 PCA 散点图
+fig2 <- plot_ly(ind_sample, x = ~Dim.1, y = ~Dim.2, z = ~Dim.3, color = ~Breed, colors = group_colors, text = ~Breed) %>%
+    add_markers() %>%
+    layout(scene = list(xaxis = list(title = paste('PC1:', pca_eig1, '%')),
+                        yaxis = list(title = paste('PC2:', pca_eig2, '%')),
+                        zaxis = list(title = paste('PC3:', pca_eig3, '%'))))
+
+# 保存为HTML文件
+htmlwidgets::saveWidget(fig2, "individual_pca_plot.html")
+
+# 将每个品种的 PC1, PC2 和 PC3 的值保存到 Excel 文件
+write_xlsx(ind_sample,"PCA_Breed_Values.xlsx")
 
