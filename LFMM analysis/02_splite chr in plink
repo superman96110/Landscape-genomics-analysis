@@ -1,0 +1,30 @@
+#!/bin/bash
+
+
+input_prefix="/data/supeng/env/env/horse/sample_1583"
+# 输出目录路径
+output_dir="/data/supeng/env/env/horse/lfmm"
+mkdir -p "$output_dir"
+
+# 染色体设置（马的染色体数量）
+total_chr=31  # 请确认实际染色体数量
+parallel_jobs=10  # 并行任务数
+
+# 拆分染色体（带并行控制）
+for chr in $(seq 1 $total_chr); do
+    ((i=i%parallel_jobs)); ((i++==0)) && wait  # 控制并行度
+    
+    plink --file "$input_prefix" \
+          --chr $chr \
+          --chr-set $total_chr \
+          --recode \
+          --allow-extra-chr \
+          --out "$output_dir/chr$chr" > /dev/null 2>&1 &
+done
+wait
+
+# 清理中间文件
+rm -f "$output_dir"/*.log "$output_dir"/*.nosex
+
+echo "拆分完成！输出文件："
+ls -lh "$output_dir"/chr*.{ped,map}
