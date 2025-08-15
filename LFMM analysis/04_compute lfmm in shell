@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# ========================
+# Basic Config (manual run with nohup)
+# ========================
+LFMM_BIN="/data/supeng/env/lfmm/LFMM_CL_v1.5/bin/LFMM"
+DATA_DIR="/data/supeng/env/env/horse/lfmm_vcf"
+ENV_FILE="${DATA_DIR}/pc1_values.txt"
+OUTPUT_DIR="${DATA_DIR}/lfmm_results"
+
+K_VALUE=16             # Number of latent factors
+THREADS_PER_JOB=2      # CPUs per LFMM instance
+CHR_START=1
+CHR_END=31             # Number of chromosomes
+
+mkdir -p "${OUTPUT_DIR}/logs"
+mkdir -p "${OUTPUT_DIR}/tmp"
+export TMPDIR="${OUTPUT_DIR}/tmp"
+
+# ========================
+# Function to process one chromosome
+# ========================
+process_chromosome() {
+    local chr=$1
+    local input_file="${DATA_DIR}/chr${chr}.lfmm"
+    local output_prefix="${OUTPUT_DIR}/chr${chr}"
+    local log_file="${OUTPUT_DIR}/logs/chr${chr}.log"
+
+    if [ ! -f "$input_file" ]; then
+        echo "[ERROR] Missing: chr${chr}.lfmm" | tee -a "$log_file"
+        return 1
+    fi
+
+    {
+        echo "=== Start chromosome ${chr} ==="
+        echo "Start: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Input: $(ls -lh "$input_file")"
+        echo "ENV:   $(ls -lh "$ENV_FILE")"
+
+        "${LFMM_BIN}" \
+            -x "${input_file}" \
+            -v "${ENV_FILE}" \
+            -K ${K_VALUE} \
+            -o "${output_prefix}" \
+            -p ${THREADS_PER_JOB}
+
+        echo "Done: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Output:"
+        ls -lh "${output_prefix}"*
+    } >> "${log_file}" 2>&1
+}
+
+# ========================
+# Launch all jobs in parallel
+# ========================
+export -f process_chromosome
+for chr in $(seq ${CHR_START} ${CHR_END}); do
+    process_chromosome ${chr} &
+    echo "[LAUNCH] Chromosome ${chr} started (PID: $!)"
+done
+
+# ========================
+# Wait for all to finish
+# ========================
+wait
+echo "=== All chromosomes processed ==="
+echo "Results in: ${OUTPUT_DIR}"
+rm -rf "${TMPDIR:?}"/* 2>/dev/null
