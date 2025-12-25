@@ -3,9 +3,9 @@
 #wget 下载19个气候因子后，根据经纬度坐标提取bio数据生成csv文件，相关提取py脚本如下，179服务器
 
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
 """
-从 CHELSA BioClim tif (1981-2010, V2.1) 中按经纬度点提取 bio_1..bio_19，
+从CHELSA BioClim tif (1981-2010, V2.1) 中按经纬度点提取 bio_1..bio_19，
 输出为 CSV。
 
 运行位置建议：/data/supeng/env/chelsa/1981-2010
@@ -40,8 +40,10 @@ def read_coords(path: str) -> pd.DataFrame:
     - 无表头两列数值
     仅保留前两列作为 经度、纬度
     """
-    df = pd.read_csv(path, delim_whitespace=True, engine="python")
+    # 读取坐标文件并确保保留所有行
+    df = pd.read_csv(path, delim_whitespace=True, header=None, engine="python")
 
+    # 如果文件有表头，默认跳过第一行；若无表头，直接读取所有行
     cols_lower = [str(c).strip().lower() for c in df.columns]
     lon_idx, lat_idx = None, None
 
