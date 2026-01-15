@@ -9,6 +9,7 @@ OUT_DIR="/data/supeng/env/env/horse/lfmm_vcf/lfmm_bio1_results/merged/significan
 ANNOT_BED="/data/supeng/bodysize/horse/gwas/852/825_maf005/output/horse3-gene_nochr.bed"
 
 ALPHA="0.05"   # Bonferroni family-wise error rate
+WINDOW_BP=50000  # +/- 50kb window for gene annotation
 
 mkdir -p "${OUT_DIR}"
 
@@ -50,11 +51,13 @@ bonf=$(echo "scale=20; ${ALPHA} / ${snp_count}" | bc -l)
   echo "ALPHA=${ALPHA}"
   echo "SNP_COUNT=${snp_count}"
   echo "BONFERRONI_THRESHOLD=${bonf}"
+  echo "ANNOT_WINDOW_BP=${WINDOW_BP}   # gene +/- window"
   echo "DATE=$(date '+%Y-%m-%d %H:%M:%S')"
 } > "${META}"
 
 echo "[INFO] SNP count = ${snp_count}"
 echo "[INFO] Bonferroni threshold = ${bonf}"
+echo "[INFO] Annotation window = +/-${WINDOW_BP} bp"
 
 # =========================
 # 2) Harmonize chromosome naming with annotation bed (chr prefix or not)
@@ -102,13 +105,14 @@ if [[ "${sig_n}" -eq 0 ]]; then
 fi
 
 # =========================
-# 4) Annotate with bedtools
+# 4) Annotate with bedtools (gene +/- 50kb)
 # =========================
-# -a: SNP bed (7 cols)
-# -b: gene bed
-# output: SNP cols + gene-bed cols
-bedtools intersect -a "${OUT_BED}" -b "${ANNOT_BED}" -wa -wb > "${OUT_ANN}"
-echo "[INFO] Annotated output: ${OUT_ANN}"
+# 旧逻辑: intersect 只算 overlap（SNP 必须落在基因区间/重叠）
+# 新逻辑: window -w 50000 代表 SNP 距离基因区间在 50kb 内（含 overlap）都算注释到该基因
+#
+# output: SNP cols (7) + gene-bed cols (all)
+bedtools window -a "${OUT_BED}" -b "${ANNOT_BED}" -w "${WINDOW_BP}" > "${OUT_ANN}"
+echo "[INFO] Annotated output (+/-${WINDOW_BP}bp): ${OUT_ANN}"
 
 # =========================
 # 5) Sort by P (SNP P is col7 in OUT_BED, so in OUT_ANN it's still col7)
