@@ -1,3 +1,6 @@
+#plink --file /data/supeng/env/env/horse/lfmm_vcf/chr15 --extract range locus.range --within group1.txt --freq --out snp_15_53591860_byBreed
+
+
 library(readr)
 library(dplyr)
 library(ggplot2)
