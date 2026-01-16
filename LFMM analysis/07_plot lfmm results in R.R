@@ -24,8 +24,10 @@ CMplot(
   m,
   plot.type = "m",
   LOG10 = TRUE,
-  type = "h",                      # ✅竖线型（不是点）
-  col = c("#7B1E1E", "grey70"),     # ✅两种颜色交替（枣红 + 灰）
+  type = "h",
+  col = c("#7B1E1E", "grey70"),
+  chr.den.col = NULL,              # ✅去除染色体密度色块
+  band = 0,                        # ✅关键参数:去除染色体间空白(默认=1)
   file = "png",
   file.output = TRUE,
   file.name = "LFMM_BIO1_Manhattan_line2color",
