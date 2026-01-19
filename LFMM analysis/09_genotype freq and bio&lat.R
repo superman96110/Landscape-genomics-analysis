@@ -1,3 +1,4 @@
+setwd("F:/caas/毕业课题/第五章_景观基因组/horse/chelsa/lfmm/bio1/")
 library(readr)
 library(dplyr)
 library(readxl)
@@ -6,7 +7,7 @@ library(stringr)
 
 ## ---- 输入文件 ----
 freq_file   <- "snp_8_20644555_byBreed.frq.strat"
-excel_file  <- "F:/caas/毕业课题/第五章_景观基因组/horse/chelsa/horse_ind_bio.xlsxx"
+excel_file  <- "F:/caas/毕业课题/第五章_景观基因组/horse/chelsa/horse_ind_bio.xlsx"
 excel_sheet <- "group_bio19+ele"   # 也可以写 "group_bio19+ele"
 
 
