@@ -2,7 +2,7 @@
 plink --vcf horse_filter_pruned_956.vcf --recode --double-id --allow-extra-chr --chr-set 31 --out horse_filter_pruned_956 --keep-allele-order 
 
 # 使用sambada自带的程序，将基因组数据转为sambada识别的格式
-
+/data/supeng/env/sambada/sambada-0.8.3-ubuntu/binaries/recode-plink  956 1044869 /data/supeng/env/env/horse/sambada/chelsa/horse_filter_pruned_956.ped /data/supeng/env/env/horse/sambada/chelsa/horse_filter_pruned_956_sambada.mol
 
 # 使用sambada自带的split脚本，将转换后的文件进行拆分
 /data/supeng/env/sambada/sambada-0.8.3-ubuntu/binaries/supervision param-split.txt
